@@ -278,12 +278,14 @@ int main(int argc, char * argv[]) {
         if (qfns.from_float && qfns.to_float) {
             printf("%s\n", ggml_type_name(type));
 
+            ggml_quantize_init(type);
+
             if (params.op_quantize_row_q_reference) {
                 printf("  quantize_row_q_reference\n");
                 for (size_t size : params.test_sizes) {
                     printf("    %zu values (%.2f MB)\n", size, 4*size/(float)(1024*1024));
                     auto quantize_fn = [&](void) -> float {
-                        qfns.from_float_reference(test_data1, test_q1, size);
+                        qfns.from_float_ref(test_data1, test_q1, size);
                         return test_q1[0];
                     };
                     size_t quantized_size = ggml_row_size(type, size);
@@ -344,7 +346,7 @@ int main(int argc, char * argv[]) {
                     printf("    %zu values (%.2f MB)\n", size, 4*size/(float)(1024*1024));
                     auto quantize_fn = [&](void) -> float {
                         float result;
-                        qfns.vec_dot(size, &result, test_q1, test_q2);
+                        qfns.vec_dot(size, &result, 0, test_q1, 0, test_q2, 0, 1);
                         return result;
                     };
                     size_t quantized_size = ggml_row_size(type, size);
